@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engineering Role-Based Doubt Solver</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Engineering Role-Based Doubt Solver</h1>
+        <p class="subtitle">Ask your doubt — get a clear, professor-style explanation.</p>
+      </header>
+
+      <div class="grid">
+        <form method="post" class="form-card left-card">
+          <label for="branch">Branch</label>
+          <select id="branch" name="branch">
+            {% for b in branch_subjects.keys() %}
+              <option value="{{ b }}" {% if branch==b %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="subject">Subject</label>
+          <select id="subject" name="subject">
+            {% for s in branch_subjects[branch] %}
+              <option value="{{ s }}" {% if subject==s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="doubt">Your Doubt</label>
+          <textarea id="doubt" name="doubt" rows="4" placeholder="Type your doubt here or pick a sample doubt below"></textarea>
+
+          <div class="sample-doubts" id="sample-doubts">
+            <!-- sample doubt buttons inserted by JS -->
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn">Get Explanation</button>
+            <button type="button" class="btn ghost" onclick="document.getElementById('doubt').value=''">Clear</button>
+          </div>
+        </form>
+
+        <section class="response-card right-card">
+          {% if response %}
+            {{ response|safe }}
+          {% else %}
+            <p class="hint">Your explanation will appear here after you submit a doubt.</p>
+          {% endif %}
+        </section>
+      </div>
+
+      <footer>
+        <p>Built for B.Tech students — concise, applied, and friendly.</p>
+      </footer>
+    
+    <script>
+      // Injected data from server
+      const BRANCH_SUBJECTS = {{ branch_subjects | tojson }};
+      const SAMPLE_DOUBTS = {{ sample_doubts | tojson }};
+
+      const branchSel = document.getElementById('branch');
+      const subjectSel = document.getElementById('subject');
+      const sampleContainer = document.getElementById('sample-doubts');
+
+      function populateSubjects(branch){
+        subjectSel.innerHTML = '';
+        BRANCH_SUBJECTS[branch].forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          subjectSel.appendChild(opt);
+        });
+        populateSamples(subjectSel.value);
+      }
+
+      function populateSamples(subject){
+        sampleContainer.innerHTML = '';
+        const samples = SAMPLE_DOUBTS[subject] || [];
+        samples.forEach(s => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'chip';
+          btn.textContent = s;
+          btn.onclick = () => { document.getElementById('doubt').value = s; };
+          sampleContainer.appendChild(btn);
+        });
+      }
+
+      branchSel.addEventListener('change', (e) => populateSubjects(e.target.value));
+      subjectSel.addEventListener('change', (e) => populateSamples(e.target.value));
+
+      // initial populate on load
+      populateSamples(subjectSel.value);
+    </script>
+    </main>
+  </body>
+</html>
